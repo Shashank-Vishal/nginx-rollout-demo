@@ -4,21 +4,11 @@ metadata:
   name: nginx-rollout
 spec:
   replicas: {{ .Values.replicaCount }}
-  strategy:
-    canary:
-      steps:
-        - setweight: 20
-        - pause:
-            duration: 20s
 
-        - setweight: 50
-        - pause:
-            duration: 20s
-
-        - setweight: 100
   selector:
-    matchLables:
+    matchLabels:
       app: nginx
+
   template:
     metadata:
       labels:
@@ -27,11 +17,25 @@ spec:
       containers:
       - name: nginx
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        portS:
+        ports:
         - containerPort: 80
-        redinessProbe:
+
+        readinessProbe:
           httpGet:
             path: /
             port: 80
           initialDelaySeconds: 10
           periodSeconds: 10
+
+  strategy:
+    canary:
+      steps:
+      - setWeight: 20
+      - pause:
+          duration: 20s
+
+      - setWeight: 50
+      - pause:
+          duration: 20s
+
+      - setWeight: 100
